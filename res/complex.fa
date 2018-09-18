@@ -1,0 +1,8 @@
+s q1 start;
+t q1 q1 0 1;
+s q2 normal;
+t q1 q2 1;
+s q3 normal;
+t q2 q3 0 1;
+s q4 accept;
+t q3 q4 0 1;

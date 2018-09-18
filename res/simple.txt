@@ -1,0 +1,12 @@
+s q start;
+s q0 normal;
+s q00 normal;
+s q001 accept;
+t q q 1;
+t q q0 0;
+t q0 q 1;
+t q0 q00 0;
+t q00 q00 0;
+t q00 q001 1;
+t q001 q001 0;
+t q001 q001 1;

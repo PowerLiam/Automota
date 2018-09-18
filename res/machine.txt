@@ -1,0 +1,9 @@
+s q1 start;
+s q2 normal;
+s q3 normal;
+s q4 accept;
+t q1 q1 0 1;
+t q1 q2 1;
+t q2 q3 0 |e|;
+t q3 q4 1;
+t q4 q4 0 1;
