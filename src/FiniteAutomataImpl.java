@@ -31,7 +31,7 @@ public class FiniteAutomataImpl implements FiniteAutomata {
     public FiniteAutomataImpl(List<State> states, int TID) {
         this.STATES = states;
         for (State state : STATES) {
-            if (state instanceof StartState) {
+            if (state instanceof Start) {
                 if (currentState != null) {
                     System.err.println("Found multiple start states when creating Automata.");
                     System.exit(0);
@@ -84,7 +84,7 @@ public class FiniteAutomataImpl implements FiniteAutomata {
         // Go get all the AcceptStates along the tree of FiniteAutomata that have been executed and haven't died.
         List<State> ret = new ArrayList<>();
         // See if I myself have completed execution and am on a final state.
-        if (!this.hasDied && this.currentState instanceof AcceptState) {
+        if (!this.hasDied && this.currentState instanceof Accept) {
             ret.add(currentState);
         }
         // Get all other AcceptStates that Automata I spawned have fallen into.
@@ -98,7 +98,7 @@ public class FiniteAutomataImpl implements FiniteAutomata {
         for (FiniteAutomataImpl cur: autos) {
             // See if it had a nice ending state.
             // System.out.println(TID + ": " + cur.currentState.getName());
-            if (!cur.hasDied && cur.currentState instanceof AcceptState) {
+            if (!cur.hasDied && cur.currentState instanceof Accept) {
                     acc.add(cur.currentState);
             }
             // Look at all the FiniteAutomata that cur spawned.
@@ -116,6 +116,51 @@ public class FiniteAutomataImpl implements FiniteAutomata {
             System.err.println(TID + ": Invalid list of states, maybe duplicate name or start state?");
             System.exit(0);
         }
+        // Parse the entire input of this FiniteAutomata, spawning threads for any non-deterministic branches.
+        parseMyStr();
+
+        // Now that this Automata has finished processing input we need to decide if is "finished", and
+        // wait if not.  A FiniteAutomata hasFinished when it is done processing its input and ALL branches it spawned
+        // have finished.
+
+        // If I had no children and finished parsing my String, I am DONE (No children to wait on, all input
+        // ingested)
+        if (executeThreads.keySet().size() == 0) {
+            hasFinished = true;
+            //METHOD EXIT 2: SUCCESS NO CHILDREN
+            return;
+        }
+        // Wait here for ALL children to finish.
+        waitForChildren();
+        // Now I am truly finished (I am done and all my children are done), and can finally bail out of execution.
+        this.hasFinished = true;
+        //METHOD EXIT 3: SUCCESS, CHILDREN FINISHED
+    }
+
+    // Wait for all children to finish processing.
+    private void waitForChildren() {
+        // firstPass allows us to not spin the CPU if we are waiting for a slow child, but still be fast if all children
+        // are done initially.
+        boolean firstPass = true;
+        boolean childrenFinished;
+        do {
+            childrenFinished = true;
+            for (FiniteAutomataImpl check : executeThreads.keySet()) {
+                childrenFinished &= check.hasFinished;
+            }
+            if (!firstPass) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            firstPass = false;
+        } while (!childrenFinished);
+    }
+
+    // Parse the entire input of this FiniteAutomata, spawning threads for any non-deterministic branches.
+    private void parseMyStr() {
         // Main loop
         int index;
         char[] strArr = inputStr.toCharArray();
@@ -168,42 +213,6 @@ public class FiniteAutomataImpl implements FiniteAutomata {
                 }
             }
         }
-        // Now that this Automata has finished processing input we need to decide if is "finished", and
-        // wait if not.  A FiniteAutomata hasFinished when it is done processing its input and ALL branches it spawned
-        // have finished.
-
-        // If I had no children and exited the above execute loop, I am DONE (No children to wait on, all input
-        // ingested)
-        if (executeThreads.keySet().size() == 0) {
-            hasFinished = true;
-            //METHOD EXIT 2: SUCCESS NO CHILDREN
-            return;
-        }
-
-        // Wait here for ALL children to finish.
-
-        // firstPass allows us to not spin the CPU if we are waiting for a slow child, but still be fast if all children
-        // are done initially.
-        boolean firstPass = true;
-        boolean childrenFinished;
-        do {
-            childrenFinished = true;
-            for (FiniteAutomataImpl check : executeThreads.keySet()) {
-                childrenFinished &= check.hasFinished;
-            }
-            if (!firstPass) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            firstPass = false;
-        } while (!childrenFinished);
-
-        // Now I am truly finished (I am done and all my children are done), and can finally bail out of execution.
-        this.hasFinished = true;
-        //METHOD EXIT 3: SUCCESS, CHILDREN FINISHED
     }
 
     public void setString(String s) {
@@ -221,7 +230,7 @@ public class FiniteAutomataImpl implements FiniteAutomata {
         List<Transition> validateTransitions = new ArrayList<>();
         for(State s : states) {
             // Ensure exactly one start state.
-            if (s instanceof StartState) {
+            if (s instanceof Start) {
                 if (start) {
                     return false;
                 }

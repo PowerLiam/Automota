@@ -1,0 +1,15 @@
+s q0 start;
+s qa accept;
+s qb accept;
+s qab normal;
+s qba normal;
+t q0 qa a;
+t q0 qb b;
+t qa qa a;
+t qb qb b;
+t qa qab b;
+t qb qba a;
+t qab qab b;
+t qba qba a;
+t qba qb b;
+t qab qa a;

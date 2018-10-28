@@ -98,6 +98,8 @@ public class Main {
                             tempS = new NormalState(tempSName);
                         } else if (cur.equals("accept;")) {
                             tempS = new AcceptState(tempSName);
+                        } else if (cur.equals("startaccept;")) {
+                            tempS = new StartAcceptState(tempSName);
                         } else {
                             System.err.println("Error while parsing State info.  Found: " + cur );
                             System.exit(0);

@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractState implements State{
+public abstract class AbstractState implements State {
     private final String NAME;
     private List<Transition> TRANSITIONS;
 
